@@ -42,3 +42,17 @@ pnpm dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+## To Do
+
+- Functionality to animate gradients
+- Make site responsive - not a priority since dev is not done on mobile.
+
+## License
+
+[MIT](./LICENSE)
+
+## Author
+
+Marcello De Feo
+[defeo.io](https://defeo.io/)

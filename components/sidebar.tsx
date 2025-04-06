@@ -27,7 +27,6 @@ export function Sidebar({ children, className }: SidebarProps) {
           className={cn(
             "flex-1 overflow-auto",
             collapsed ? "hidden" : "block",
-            // Hide scrollbar
             "scrollbar-hide",
           )}
         >

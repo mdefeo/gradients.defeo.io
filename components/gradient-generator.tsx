@@ -15,18 +15,15 @@ import { ColorPicker } from "./color-picker"
 type GradientType = "linear" | "radial" | "conic" | "repeating-linear" | "repeating-radial" | "repeating-conic"
 
 type ColorStop = {
-  id: string // Unique ID for each color stop
+  id: string
   color: string
   position: number
 }
 
-// Helper function to convert hex to rgba
 function hexToRgba(hex: string, alpha = 1): string {
   try {
-    // Handle different hex formats
     let cleanHex = hex.trim().replace("#", "")
 
-    // Handle shorthand hex (#fff)
     if (cleanHex.length === 3) {
       cleanHex = cleanHex
         .split("")
@@ -34,33 +31,25 @@ function hexToRgba(hex: string, alpha = 1): string {
         .join("")
     }
 
-    // Ensure we have a valid hex
     if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
-      // If not a valid hex, return a default color
       return `rgba(0, 0, 0, ${alpha})`
     }
 
-    // Parse the hex values
     const r = Number.parseInt(cleanHex.substring(0, 2), 16)
     const g = Number.parseInt(cleanHex.substring(2, 4), 16)
     const b = Number.parseInt(cleanHex.substring(4, 6), 16)
 
-    // Return rgba string
     return `rgba(${r}, ${g}, ${b}, ${alpha})`
   } catch (e) {
-    // Return a default color if parsing fails
     return `rgba(0, 0, 0, ${alpha})`
   }
 }
 
-// Helper function to interpolate between two colors
 function interpolateColor(color1: string, color2: string, factor: number): string {
-  // Check if the color is already in rgba format
   const rgbaRegex = /rgba?$$(\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?$$/
 
   let r1, g1, b1, a1, r2, g2, b2, a2
 
-  // Parse first color
   const rgba1 = color1.match(rgbaRegex)
   if (rgba1) {
     r1 = Number.parseInt(rgba1[1])
@@ -68,16 +57,14 @@ function interpolateColor(color1: string, color2: string, factor: number): strin
     b1 = Number.parseInt(rgba1[3])
     a1 = rgba1[4] !== undefined ? Number.parseFloat(rgba1[4]) : 1
   } else {
-    // Try to convert from hex
     const rgba = hexToRgba(color1).match(rgbaRegex)
-    if (!rgba) return color1 // Fallback
+    if (!rgba) return color1 
     r1 = Number.parseInt(rgba[1])
     g1 = Number.parseInt(rgba[2])
     b1 = Number.parseInt(rgba[3])
     a1 = rgba[4] !== undefined ? Number.parseFloat(rgba[4]) : 1
   }
 
-  // Parse second color
   const rgba2 = color2.match(rgbaRegex)
   if (rgba2) {
     r2 = Number.parseInt(rgba2[1])
@@ -85,16 +72,14 @@ function interpolateColor(color1: string, color2: string, factor: number): strin
     b2 = Number.parseInt(rgba2[3])
     a2 = rgba2[4] !== undefined ? Number.parseFloat(rgba2[4]) : 1
   } else {
-    // Try to convert from hex
     const rgba = hexToRgba(color2).match(rgbaRegex)
-    if (!rgba) return color2 // Fallback
+    if (!rgba) return color2 
     r2 = Number.parseInt(rgba[1])
     g2 = Number.parseInt(rgba[2])
     b2 = Number.parseInt(rgba[3])
     a2 = rgba[4] !== undefined ? Number.parseFloat(rgba[4]) : 1
   }
 
-  // Interpolate
   const r = Math.round(r1 + factor * (r2 - r1))
   const g = Math.round(g1 + factor * (g2 - g1))
   const b = Math.round(b1 + factor * (b2 - b1))
@@ -118,18 +103,15 @@ export default function GradientGenerator() {
   const [draggedItem, setDraggedItem] = useState<string | null>(null)
   const [dragOverItem, setDragOverItem] = useState<string | null>(null)
 
-  // Generate a unique ID for new color stops
   const generateId = () => `stop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
   const addColorStop = () => {
     if (colorStops.length < 5) {
-      // Find middle position between existing stops
       const positions = colorStops.map((stop) => stop.position)
       const min = Math.min(...positions)
       const max = Math.max(...positions)
       const middle = min + (max - min) / 2
 
-      // Generate a random color
       const randomColor = `#${Math.floor(Math.random() * 16777215)
         .toString(16)
         .padStart(6, "0")}`
@@ -155,18 +137,15 @@ export default function GradientGenerator() {
     setColorStops(newColorStops)
   }
 
-  // Handle drag start
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
     setDraggedItem(id)
     e.dataTransfer.effectAllowed = "move"
-    // Add some transparency to the dragged item
     setTimeout(() => {
       const element = document.getElementById(`color-stop-${id}`)
       if (element) element.style.opacity = "0.5"
     }, 0)
   }
 
-  // Handle drag over
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>, id: string) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = "move"
@@ -175,7 +154,6 @@ export default function GradientGenerator() {
     }
   }
 
-  // Handle drag end
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>, id: string) => {
     const element = document.getElementById(`color-stop-${id}`)
     if (element) element.style.opacity = "1"
@@ -183,78 +161,63 @@ export default function GradientGenerator() {
     setDragOverItem(null)
   }
 
-  // Handle drop
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, id: string) => {
     e.preventDefault()
 
     if (draggedItem === null || draggedItem === id) return
 
-    // Find the indices of the dragged and target items
     const draggedIndex = colorStops.findIndex((stop) => stop.id === draggedItem)
     const targetIndex = colorStops.findIndex((stop) => stop.id === id)
 
     if (draggedIndex === -1 || targetIndex === -1) return
 
-    // Create a new array with the items reordered
     const newColorStops = [...colorStops]
 
-    // Get the dragged and target stops
-    const draggedStop = { ...newColorStops[draggedIndex] }
-    const targetStop = { ...newColorStops[targetIndex] }
+    const [draggedStop] = newColorStops.splice(draggedIndex, 1)
 
-    // Swap the position values between the dragged and target stops
-    const tempPosition = draggedStop.position
-    draggedStop.position = targetStop.position
-    targetStop.position = tempPosition
+    newColorStops.splice(targetIndex, 0, draggedStop)
 
-    // Update the stops with swapped positions
-    newColorStops[draggedIndex] = draggedStop
-    newColorStops[targetIndex] = targetStop
+    const updatedStops = newColorStops.map((stop, index) => {
+      const newPosition = newColorStops.length <= 1 ? 0 : Math.round((index / (newColorStops.length - 1)) * 100)
 
-    // Update the state with the new order and swapped positions
-    setColorStops(newColorStops)
+      return {
+        ...stop,
+        position: newPosition,
+      }
+    })
 
-    // Reset drag state
+    setColorStops(updatedStops)
+
     setDraggedItem(null)
     setDragOverItem(null)
 
-    // Reset opacity
     const element = document.getElementById(`color-stop-${draggedItem}`)
     if (element) element.style.opacity = "1"
   }
 
   const generateGradientCSS = () => {
-    // Sort color stops by position
     const sortedStops = [...colorStops].sort((a, b) => a.position - b.position)
 
-    // Generate intermediate stops based on smoothness
     let allStops = [...sortedStops]
 
-    // Only add intermediate stops if smoothness > 0
     if (smoothness > 0) {
       const intermediateStops = []
 
-      // Calculate how many intermediate stops to add between each pair
-      // More smoothness = more intermediate stops (exponential scale for more noticeable effect)
       const stopsToAdd = Math.round(Math.pow(smoothness / 10, 1.5) + 1)
 
-      // For each pair of adjacent stops, add intermediate stops
       for (let i = 0; i < sortedStops.length - 1; i++) {
         const currentStop = sortedStops[i]
         const nextStop = sortedStops[i + 1]
 
-        // Add the current stop (converted to rgba)
         intermediateStops.push({
           ...currentStop,
           color: hexToRgba(currentStop.color),
         })
 
-        // Calculate and add intermediate stops
         for (let j = 1; j <= stopsToAdd; j++) {
           const factor = j / (stopsToAdd + 1)
           const position = currentStop.position + factor * (nextStop.position - currentStop.position)
 
-          // Convert colors to rgba and interpolate
           const color1 = hexToRgba(currentStop.color)
           const color2 = hexToRgba(nextStop.color)
           const color = interpolateColor(color1, color2, factor)
@@ -266,7 +229,6 @@ export default function GradientGenerator() {
           })
         }
 
-        // Add the last stop if it's the final pair (converted to rgba)
         if (i === sortedStops.length - 2) {
           intermediateStops.push({
             ...nextStop,
@@ -277,32 +239,62 @@ export default function GradientGenerator() {
 
       allStops = intermediateStops
     } else {
-      // If no smoothness, still convert colors to rgba
       allStops = sortedStops.map((stop) => ({
         ...stop,
         color: hexToRgba(stop.color),
       }))
     }
 
-    // Create the color stops string with proper formatting
-    const stopsString = allStops.map((stop) => `${stop.color} ${stop.position}%`).join(",\n  ")
-
-    let gradientCSS = ""
-    let backgroundSize = "100% 100%"
-    let backgroundRepeat = ""
-
-    // Determine if this is a repeating gradient
     const isRepeating = gradientType.startsWith("repeating-")
 
-    // For repeating gradients, adjust the size
+    let gradientSize = 100
     if (isRepeating) {
-      // Calculate repeat size based on smoothness (inverse relationship)
-      const repeatSize = Math.max(5, 110 - smoothness)
-      backgroundSize = `${repeatSize}% ${repeatSize}%`
-      backgroundRepeat = "repeat"
+      gradientSize = Math.max(10, 100 - smoothness)
     }
 
-    // Build the gradient CSS with proper formatting
+    let stopsString = ""
+
+    if (isRepeating) {
+      if (gradientType === "repeating-conic") {
+        const segmentSize = Math.max(5, 30 - smoothness / 4)
+
+        const stops = []
+        for (let i = 0; i < allStops.length; i++) {
+          const stop = allStops[i]
+          const nextStop = allStops[(i + 1) % allStops.length]
+
+          const startDeg = (stop.position / 100) * segmentSize
+          const endDeg = startDeg + segmentSize / allStops.length
+
+          stops.push(`${stop.color} ${startDeg}deg ${endDeg}deg`)
+        }
+
+        stopsString = stops.join(",\n  ")
+      } else if (gradientType === "repeating-linear") {
+        const stops = []
+        for (let i = 0; i < allStops.length; i++) {
+          const stop = allStops[i]
+          stops.push(`${stop.color} ${(stop.position * gradientSize) / 100}px`)
+        }
+
+        stops.push(`${allStops[0].color} ${gradientSize}px`)
+        stopsString = stops.join(",\n  ")
+      } else if (gradientType === "repeating-radial") {
+        const stops = []
+        for (let i = 0; i < allStops.length; i++) {
+          const stop = allStops[i]
+          stops.push(`${stop.color} ${(stop.position * gradientSize) / 100}px`)
+        }
+
+        stops.push(`${allStops[0].color} ${gradientSize}px`)
+        stopsString = stops.join(",\n  ")
+      }
+    } else {
+      stopsString = allStops.map((stop) => `${stop.color} ${stop.position}%`).join(",\n  ")
+    }
+
+    let gradientCSS = ""
+
     switch (gradientType) {
       case "linear":
         gradientCSS = `linear-gradient(\n  ${angle}deg,\n  ${stopsString}\n)`
@@ -324,23 +316,13 @@ export default function GradientGenerator() {
         break
     }
 
-    // Generate formatted CSS for display
-    let cssCodeText = `background-image: ${gradientCSS};`
+    const cssCodeText = `background-image: ${gradientCSS};`
 
-    if (isRepeating) {
-      cssCodeText += `\nbackground-size: ${backgroundSize};`
-      cssCodeText += `\nbackground-repeat: ${backgroundRepeat};`
-    }
-
-    // For applying the style, we need a non-formatted version
     const inlineGradientCSS = gradientCSS.replace(/\n\s*/g, " ")
 
     return {
       gradientCSS: inlineGradientCSS,
-      backgroundSize,
-      backgroundRepeat,
       cssCodeText,
-      stopsCount: allStops.length,
     }
   }
 
@@ -355,10 +337,9 @@ export default function GradientGenerator() {
         })
         setTimeout(() => setCopied(false), 2000)
       } else {
-        // Fallback method using a temporary textarea element
         const textArea = document.createElement("textarea")
         textArea.value = cssCode
-        textArea.style.position = "fixed" // Avoid scrolling to bottom
+        textArea.style.position = "fixed"
         textArea.style.opacity = "0"
         document.body.appendChild(textArea)
         textArea.focus()
@@ -399,52 +380,38 @@ export default function GradientGenerator() {
     }
   }
 
-  // Update gradient and dispatch event when settings change
   useEffect(() => {
-    const { gradientCSS, backgroundSize, backgroundRepeat, cssCodeText } = generateGradientCSS()
+    const { gradientCSS, cssCodeText } = generateGradientCSS()
 
     setCssCode(cssCodeText)
 
-    // Create style object for the gradient
     const newStyle = {
       backgroundImage: gradientCSS,
-      backgroundSize,
-      backgroundRepeat: backgroundRepeat || undefined,
     }
 
     setGradientStyle(newStyle)
 
-    // Dispatch custom event with the new gradient style
     const event = new CustomEvent("gradientChange", { detail: newStyle })
     window.dispatchEvent(event)
 
-    // Save to localStorage for persistence
     localStorage.setItem("gradientStyle", JSON.stringify(newStyle))
   }, [colorStops, gradientType, angle, smoothness])
 
-  // Trigger initial gradient on mount
   useEffect(() => {
-    // Force an initial gradient update
-    const { gradientCSS, backgroundSize, backgroundRepeat, cssCodeText } = generateGradientCSS()
+    const { gradientCSS, cssCodeText } = generateGradientCSS()
 
     setCssCode(cssCodeText)
 
-    // Create style object for the gradient
     const initialStyle = {
       backgroundImage: gradientCSS,
-      backgroundSize,
-      backgroundRepeat: backgroundRepeat || undefined,
     }
 
-    // Dispatch the initial gradient event
     const event = new CustomEvent("gradientChange", { detail: initialStyle })
     window.dispatchEvent(event)
 
-    // Save to localStorage
     localStorage.setItem("gradientStyle", JSON.stringify(initialStyle))
-  }, []) // Empty dependency array ensures this runs only once on mount
+  }, []) 
 
-  // Get the appropriate label for the smoothness slider based on gradient type
   const getSmoothnessLabel = () => {
     if (gradientType.startsWith("repeating-")) {
       return "Repeat Density"

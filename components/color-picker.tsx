@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { GripHorizontal } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface ColorPickerProps {
   color: string
@@ -16,6 +17,7 @@ interface ColorPickerProps {
 }
 
 export function ColorPicker({ color, onChange, className }: ColorPickerProps) {
+  const { toast } = useToast()
   const [hsv, setHsv] = useState({ h: 0, s: 0, v: 0 })
   const [inputValue, setInputValue] = useState("")
   const [format, setFormat] = useState<"HEX" | "RGBa">("HEX")
@@ -114,7 +116,11 @@ export function ColorPicker({ color, onChange, className }: ColorPickerProps) {
         onChange(value)
       }
     } catch (error) {
-      console.error("Error parsing color:", error)
+      toast({
+        title: "Invalid color format",
+        description: "Please enter a valid color format.",
+        variant: "destructive",
+      })      
     }
   }
 
@@ -199,14 +205,17 @@ export function ColorPicker({ color, onChange, className }: ColorPickerProps) {
         b = Number.parseInt(rgbMatch[2]) / 255
       }
     } catch (error) {
-      console.error("Error parsing hex color:", error)
+      toast({
+        title: "Invalid hex color",
+        description: "Please enter a valid hex color code.",
+        variant: "destructive",
+      })      
     }
 
     const max = Math.max(r, g, b)
     const min = Math.min(r, g, b)
     const delta = max - min
 
-    // Calculate HSV values
     let h = 0
     const s = max === 0 ? 0 : delta / max
     const v = max
